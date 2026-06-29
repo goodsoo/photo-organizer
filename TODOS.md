@@ -1,0 +1,43 @@
+# TODOS — 사진 이벤트 정리기
+
+`/plan-eng-review` 2026-06-22 캡처.
+
+## TODO-1 — 중복제거 (dedup) [M2]
+- **What:** 동일 내용 사진 자동 감지·정리.
+- **Why:** 원래 3대 고통 중 하나(쓸데없는·중복·비슷한 사진). M1이 이미 sha256을 계산하니 거의 공짜로 얹힘.
+- **Pros:** 큰 가치, 해시 재사용으로 추가비용 작음.
+- **Cons:** "비슷한"(유사)은 해시로 안 잡힘 → 지각해시(pHash) 별도 필요.
+- **Context:** M1 SQLite 맨페스트에 sha256 칼럼이 이미 있음. 같은 해시 그룹핑부터 시작. 유사사진은 후속.
+- **Depends on:** M1 맨페스트(D9).
+
+## TODO-2 — 이벤트 갭 튜닝 + 파편 경고
+- **What:** 4시간 갭 임계 파라미터화 + 단일사진 이벤트 대량 발생시 경고.
+- **Why:** 4h 단일상수는 휴리스틱 — 밤샘여행은 잠자는 4h에 쪼개지고, 스캔/가져오기 더미는 파편 폭발.
+- **Pros:** 실제 사진으로 사후튜닝 가능, 나쁜 분할 조기감지.
+- **Cons:** 임계 노출이 UX 복잡도 약간 증가.
+- **Context:** `--gap-hours` 플래그 + dry-run 요약에 "1장짜리 이벤트 N개" 경고.
+- **Depends on:** M1 split_events(D10).
+
+## TODO-3 — 맨페스트/사본 내구성 (원본 삭제 전 안전경계)
+- **What:** 사용자가 원본 지우기 전, 사본+맨페스트 백업·재검증 절차.
+- **Why:** 진짜 손실은 복사과정이 아니라 "사본 믿고 원본 포맷"하는 순간 일어남. 맨페스트가 사본과 같은 디스크에만 있으면 그 디스크 사망시 전부 소실.
+- **Pros:** 1순위 제약("손실 절대 불가")의 진짜 마지막 구멍을 막음.
+- **Cons:** M1 범위 밖(원본삭제는 M1이 안 함) — 절차/문서 성격.
+- **Context:** 아웃사이드 보이스 T1. 맨페스트 2벌 보관 + 삭제 전 `--verify-all` 재검증 명령.
+- **Depends on:** M1 맨페스트(D9), 해시검증(D3).
+
+## TODO-4 — ContentIdentifier 짝 매칭 [M1.5]
+- **What:** 라이브포토 짝을 stem 대신 `ContentIdentifier` EXIF로 묶기.
+- **Why:** 편집본(`IMG_E1234`)·버스트에서 stem 매칭이 깨짐.
+- **Pros:** 견고한 짝 매칭.
+- **Cons:** exiftool 태그 1개 추가 추출.
+- **Context:** 플랜 Next Steps 3에 명시. M1은 stem으로 시작.
+- **Depends on:** M1 pair_live_photos(D4).
+
+## TODO-5 — HEIC OffsetTimeOriginal 타임존 보정
+- **What:** 아이폰 HEIC의 `OffsetTimeOriginal`로 타임존 보정.
+- **Why:** 여행 시차 정확 정렬.
+- **Pros:** 다국가 여행 사진 정확도.
+- **Cons:** 알려진 한계, M1은 로컬시각 그대로가 사람 기억과 대체로 맞음.
+- **Context:** 플랜 Open Questions에 "나중에"로 명시.
+- **Depends on:** M1 pick_capture_time(D7).
