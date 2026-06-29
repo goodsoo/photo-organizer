@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+# 정리 결과물/맨페스트는 사용자 데이터 — 절대 커밋 금지
+*.sqlite3
+*.sqlite3-*
+_삭제예정/
+_기타/
+_분류안됨/
